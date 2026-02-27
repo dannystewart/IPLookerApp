@@ -8,6 +8,9 @@
     },
     {
       "path": "../iplooker"
+    },
+    {
+      "path": "../homebrew-apps"
     }
   ],
   "settings": {
