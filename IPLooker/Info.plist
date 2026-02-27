@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IPAPI_IS_KEY</key>
+	<string>$(IPAPI_IS_KEY)</string>
+	<key>IPDATA_CO_KEY</key>
+	<string>$(IPDATA_CO_KEY)</string>
+	<key>IPGEOLOCATION_IO_KEY</key>
+	<string>$(IPGEOLOCATION_IO_KEY)</string>
+	<key>IPINFO_IO_KEY</key>
+	<string>$(IPINFO_IO_KEY)</string>
+	<key>IPLOCATE_IO_KEY</key>
+	<string>$(IPLOCATE_IO_KEY)</string>
+</dict>
+</plist>

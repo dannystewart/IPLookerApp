@@ -6,13 +6,34 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		30094F292F51E43B00EFA3A9 /* IPLookerIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 30094F282F51E43B00EFA3A9 /* IPLookerIcon.icon */; };
+		30094F2C2F51E4DE00EFA3A9 /* PolyKit in Frameworks */ = {isa = PBXBuildFile; productRef = 30094F2B2F51E4DE00EFA3A9 /* PolyKit */; };
+		30094F332F51E8E400EFA3A9 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 30094F322F51E8E400EFA3A9 /* Secrets.xcconfig */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		30094EDF2F51DDCF00EFA3A9 /* IPLooker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IPLooker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		30094F282F51E43B00EFA3A9 /* IPLookerIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = IPLookerIcon.icon; sourceTree = "<group>"; };
+		30094F322F51E8E400EFA3A9 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Secrets.xcconfig; path = Config/Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		30094F352F51E96400EFA3A9 /* Exceptions for "IPLooker" folder in "IPLooker" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 30094EDE2F51DDCF00EFA3A9 /* IPLooker */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		30094EE12F51DDCF00EFA3A9 /* IPLooker */ = {
+		30094EF72F51DE5100EFA3A9 /* IPLooker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				30094F352F51E96400EFA3A9 /* Exceptions for "IPLooker" folder in "IPLooker" target */,
+			);
 			path = IPLooker;
 			sourceTree = "<group>";
 		};
@@ -23,6 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				30094F2C2F51E4DE00EFA3A9 /* PolyKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -32,8 +54,10 @@
 		30094ED62F51DDCF00EFA3A9 = {
 			isa = PBXGroup;
 			children = (
-				30094EE12F51DDCF00EFA3A9 /* IPLooker */,
+				30094EF72F51DE5100EFA3A9 /* IPLooker */,
+				30094F282F51E43B00EFA3A9 /* IPLookerIcon.icon */,
 				30094EE02F51DDCF00EFA3A9 /* Products */,
+				30094F322F51E8E400EFA3A9 /* Secrets.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -61,10 +85,11 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				30094EE12F51DDCF00EFA3A9 /* IPLooker */,
+				30094EF72F51DE5100EFA3A9 /* IPLooker */,
 			);
 			name = IPLooker;
 			packageProductDependencies = (
+				30094F2B2F51E4DE00EFA3A9 /* PolyKit */,
 			);
 			productName = IPLooker;
 			productReference = 30094EDF2F51DDCF00EFA3A9 /* IPLooker.app */;
@@ -94,6 +119,9 @@
 			);
 			mainGroup = 30094ED62F51DDCF00EFA3A9;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				30094F2A2F51E4DE00EFA3A9 /* XCRemoteSwiftPackageReference "polykit-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 30094EE02F51DDCF00EFA3A9 /* Products */;
 			projectDirPath = "";
@@ -109,6 +137,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				30094F292F51E43B00EFA3A9 /* IPLookerIcon.icon in Resources */,
+				30094F332F51E8E400EFA3A9 /* Secrets.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -127,6 +157,7 @@
 /* Begin XCBuildConfiguration section */
 		30094EE82F51DDCF00EFA3A9 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 30094F322F51E8E400EFA3A9 /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -191,6 +222,7 @@
 		};
 		30094EE92F51DDCF00EFA3A9 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 30094F322F51E8E400EFA3A9 /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -247,8 +279,9 @@
 		};
 		30094EEB2F51DDCF00EFA3A9 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 30094F322F51E8E400EFA3A9 /* Secrets.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = IPLookerIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -256,9 +289,22 @@
 				DEVELOPMENT_TEAM = PL2FTGT24W;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = IPLooker/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = IPLooker;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -272,15 +318,17 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
 		30094EEC2F51DDCF00EFA3A9 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 30094F322F51E8E400EFA3A9 /* Secrets.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = IPLookerIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -288,9 +336,22 @@
 				DEVELOPMENT_TEAM = PL2FTGT24W;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = IPLooker/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = IPLooker;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -304,8 +365,9 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
@@ -331,6 +393,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		30094F2A2F51E4DE00EFA3A9 /* XCRemoteSwiftPackageReference "polykit-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dannystewart/polykit-swift";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		30094F2B2F51E4DE00EFA3A9 /* PolyKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 30094F2A2F51E4DE00EFA3A9 /* XCRemoteSwiftPackageReference "polykit-swift" */;
+			productName = PolyKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 30094ED72F51DDCF00EFA3A9 /* Project object */;
 }
