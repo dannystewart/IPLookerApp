@@ -5,7 +5,6 @@ actor IPLookupService {
     static let shared: IPLookupService = .init()
 
     private let allSources: [any LookupSource.Type] = [
-        IPAPISource.self,
         IPAPICoSource.self,
         IPAPIIsSource.self,
         IPDataSource.self,
