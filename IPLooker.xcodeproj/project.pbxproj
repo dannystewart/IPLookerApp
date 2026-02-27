@@ -10,12 +10,14 @@
 		30094F292F51E43B00EFA3A9 /* IPLookerIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 30094F282F51E43B00EFA3A9 /* IPLookerIcon.icon */; };
 		30094F2C2F51E4DE00EFA3A9 /* PolyKit in Frameworks */ = {isa = PBXBuildFile; productRef = 30094F2B2F51E4DE00EFA3A9 /* PolyKit */; };
 		30094F332F51E8E400EFA3A9 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 30094F322F51E8E400EFA3A9 /* Secrets.xcconfig */; };
+		30094F6C2F5206F200EFA3A9 /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30094F6B2F5206F200EFA3A9 /* AppIntents.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		30094EDF2F51DDCF00EFA3A9 /* IPLooker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IPLooker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		30094F282F51E43B00EFA3A9 /* IPLookerIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = IPLookerIcon.icon; sourceTree = "<group>"; };
 		30094F322F51E8E400EFA3A9 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Secrets.xcconfig; path = Config/Secrets.xcconfig; sourceTree = "<group>"; };
+		30094F6B2F5206F200EFA3A9 /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/System/Library/Frameworks/AppIntents.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -44,6 +46,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				30094F6C2F5206F200EFA3A9 /* AppIntents.framework in Frameworks */,
 				30094F2C2F51E4DE00EFA3A9 /* PolyKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -58,6 +61,7 @@
 				30094F282F51E43B00EFA3A9 /* IPLookerIcon.icon */,
 				30094EE02F51DDCF00EFA3A9 /* Products */,
 				30094F322F51E8E400EFA3A9 /* Secrets.xcconfig */,
+				30094F6A2F5206F200EFA3A9 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -67,6 +71,14 @@
 				30094EDF2F51DDCF00EFA3A9 /* IPLooker.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		30094F6A2F5206F200EFA3A9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				30094F6B2F5206F200EFA3A9 /* AppIntents.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -304,8 +316,11 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = IPLooker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = IPLooker;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -315,12 +330,15 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -351,8 +369,11 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = IPLooker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = IPLooker;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -362,12 +383,15 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};

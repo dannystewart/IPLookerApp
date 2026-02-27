@@ -1,10 +1,17 @@
 import SwiftUI
 
+#if os(macOS)
+    import AppKit
+#elseif os(iOS)
+    import UIKit
+#endif
+
 // MARK: - ContentView
 
 struct ContentView: View {
     @State private var viewModel: LookupViewModel = .init()
     @State private var showCopiedConfirmation = false
+    @State private var isShowingSettings = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -12,13 +19,44 @@ struct ContentView: View {
             Divider()
             self.resultsArea
         }
-        .frame(minWidth: 500, idealWidth: 560, minHeight: 400, idealHeight: 600)
-        .task {
-            async let clipboard: Void = self.viewModel.checkClipboardForIP()
-            async let publicIP: Void = self.viewModel.fetchPublicIP()
-            await clipboard
-            await publicIP
-        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        #if os(macOS)
+            .frame(minWidth: 500, idealWidth: 560, minHeight: 400, idealHeight: 600)
+        #endif
+            .task {
+                async let publicIP: Void = self.viewModel.fetchPublicIP()
+                #if os(macOS)
+                    async let clipboard: Void = self.viewModel.checkClipboardForIP()
+                    await clipboard
+                #endif
+                await publicIP
+            }
+        #if os(iOS)
+            .navigationTitle("IPLooker")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        self.isShowingSettings = true
+                    } label: {
+                        Image(systemName: "gear")
+                    }
+                }
+            }
+            .sheet(isPresented: self.$isShowingSettings) {
+                NavigationStack {
+                    SettingsView()
+                        .navigationTitle("Settings")
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button("Done") {
+                                    self.isShowingSettings = false
+                                }
+                            }
+                        }
+                }
+            }
+        #endif
     }
 
     // MARK: - Header
@@ -29,9 +67,59 @@ struct ContentView: View {
             self.publicIPRow
         }
         .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var lookupRow: some View {
+        #if os(iOS)
+            ViewThatFits(in: .horizontal) {
+                self.lookupRowHorizontal
+                self.lookupRowVertical
+            }
+        #else
+            self.lookupRowHorizontal
+        #endif
+    }
+
+    #if os(iOS)
+        private var lookupRowVertical: some View {
+            VStack(spacing: 10) {
+                TextField("Enter IP address", text: self.$viewModel.ipInput)
+                    .textFieldStyle(.roundedBorder)
+                    .fontDesign(.monospaced)
+                    .onSubmit { Task { await self.viewModel.performLookup() } }
+                    .frame(maxWidth: .infinity)
+
+                HStack(spacing: 10) {
+                    PasteButton(payloadType: String.self) { strings in
+                        guard let pasted = strings.first else { return }
+                        self.viewModel.ipInput = pasted.trimmingCharacters(in: .whitespacesAndNewlines)
+                    }
+                    .labelStyle(.iconOnly)
+                    .tint(.blue)
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Paste")
+
+                    if self.viewModel.hasResults {
+                        Button("Clear") { self.viewModel.clear() }
+                    }
+
+                    Spacer()
+
+                    Button("Look Up") {
+                        Task { await self.viewModel.performLookup() }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(self.viewModel.ipInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || self.viewModel.isLookingUp)
+                }
+                .controlSize(.small)
+                .frame(maxWidth: .infinity)
+            }
+            .frame(maxWidth: .infinity)
+        }
+    #endif
+
+    private var lookupRowHorizontal: some View {
         HStack(spacing: 8) {
             TextField("Enter IP address", text: self.$viewModel.ipInput)
                 .textFieldStyle(.roundedBorder)
@@ -39,6 +127,7 @@ struct ContentView: View {
                 .onSubmit {
                     Task { await self.viewModel.performLookup() }
                 }
+                .frame(maxWidth: .infinity)
 
             if self.viewModel.hasResults {
                 Button {
@@ -48,71 +137,100 @@ struct ContentView: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
-                .help("Clear results")
+                #if os(macOS)
+                    .help("Clear results")
+                #endif
             }
 
             Button("Look Up") {
                 Task { await self.viewModel.performLookup() }
             }
             .keyboardShortcut(.defaultAction)
+            .buttonStyle(.borderedProminent)
             .disabled(self.viewModel.ipInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || self.viewModel.isLookingUp)
+
+            #if os(iOS)
+                PasteButton(payloadType: String.self) { strings in
+                    guard let pasted = strings.first else { return }
+                    self.viewModel.ipInput = pasted.trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+                .labelStyle(.iconOnly)
+                .tint(.blue)
+                .controlSize(.small)
+                .accessibilityLabel("Paste")
+            #endif
         }
+        .frame(maxWidth: .infinity)
     }
 
     private var publicIPRow: some View {
-        HStack {
-            Label {
-                if self.viewModel.isLoadingPublicIP {
-                    Text("Detecting...")
-                        .foregroundStyle(.secondary)
-                } else if let ip = viewModel.publicIP {
-                    HStack(spacing: 4) {
-                        Text("Your Public IP:")
-                            .fontWeight(.medium)
-                            .padding(.trailing, 4)
+        Group {
+            HStack {
+                self.publicIPLabel
 
-                        Text(ip)
-                            .textSelection(.enabled)
-                            .fontDesign(.monospaced)
+                Spacer()
 
-                        Button {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(ip, forType: .string)
-                            self.showCopiedConfirmation = true
-                            Task {
-                                try? await Task.sleep(for: .seconds(1))
-                                self.showCopiedConfirmation = false
-                            }
-                        } label: {
-                            Image(systemName: self.showCopiedConfirmation ? "checkmark" : "doc.on.doc")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .contentTransition(.symbolEffect(.replace))
-                        }
-                        .buttonStyle(.plain)
-                        .help("Copy to clipboard")
-                        .padding(.leading, 6)
+                if self.viewModel.publicIP != nil {
+                    Button("Look Up My IP") {
+                        Task { await self.viewModel.lookupMyIP() }
                     }
-                } else {
-                    Text("Unavailable")
-                        .foregroundStyle(.secondary)
+                    .controlSize(.small)
                 }
-            } icon: {
-                Image(systemName: "network")
-            }
-            .font(.headline)
-            .fontWeight(.regular)
-
-            Spacer()
-
-            if self.viewModel.publicIP != nil {
-                Button("Look Up My IP") {
-                    Task { await self.viewModel.lookupMyIP() }
-                }
-                .controlSize(.small)
             }
         }
+        #if os(macOS)
         .frame(height: 20)
+        #endif
+    }
+
+    private var publicIPLabel: some View {
+        Label {
+            if self.viewModel.isLoadingPublicIP {
+                Text("Detecting...")
+                    .foregroundStyle(.secondary)
+            } else if let ip = viewModel.publicIP {
+                HStack(spacing: 4) {
+                    Text("Your Public IP:")
+                        .fontWeight(.medium)
+                        .padding(.trailing, 4)
+
+                    Text(ip)
+                        .textSelection(.enabled)
+                        .fontDesign(.monospaced)
+
+                    Button {
+                        #if os(macOS)
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(ip, forType: .string)
+                        #elseif os(iOS)
+                            UIPasteboard.general.string = ip
+                        #endif
+                        self.showCopiedConfirmation = true
+                        Task {
+                            try? await Task.sleep(for: .seconds(1))
+                            self.showCopiedConfirmation = false
+                        }
+                    } label: {
+                        Image(systemName: self.showCopiedConfirmation ? "checkmark" : "doc.on.doc")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .contentTransition(.symbolEffect(.replace))
+                    }
+                    .buttonStyle(.plain)
+                    #if os(macOS)
+                        .help("Copy to clipboard")
+                    #endif
+                        .padding(.leading, 6)
+                }
+            } else {
+                Text("Unavailable")
+                    .foregroundStyle(.secondary)
+            }
+        } icon: {
+            Image(systemName: "network")
+        }
+        .font(.headline)
+        .fontWeight(.regular)
     }
 
     // MARK: - Results
@@ -142,7 +260,9 @@ struct ContentView: View {
                         SourceBreakdownView(sourceResults: self.viewModel.sourceResults)
                     }
                     .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .frame(maxWidth: .infinity)
             } else if let error = viewModel.errorMessage {
                 VStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle")
@@ -171,14 +291,22 @@ struct ContentView: View {
 @main
 struct IPLookerApp: App {
     var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-        .defaultSize(width: 550, height: 550)
+        #if os(macOS)
+            WindowGroup {
+                ContentView()
+            }
+            .defaultSize(width: 550, height: 550)
 
-        Settings {
-            SettingsView()
-        }
+            Settings {
+                SettingsView()
+            }
+        #else
+            WindowGroup {
+                NavigationStack {
+                    ContentView()
+                }
+            }
+        #endif
     }
 }
 

@@ -12,5 +12,7 @@
 	<string>$(IPINFO_IO_KEY)</string>
 	<key>IPLOCATE_IO_KEY</key>
 	<string>$(IPLOCATE_IO_KEY)</string>
+	<key>UILaunchScreen</key>
+	<dict/>
 </dict>
 </plist>

@@ -1,7 +1,10 @@
-import AppKit
 import Foundation
 import PolyKit
 import SwiftUI
+
+#if os(macOS)
+    import AppKit
+#endif
 
 // MARK: - LookupViewModel
 
@@ -60,12 +63,17 @@ final class LookupViewModel {
     }
 
     func checkClipboardForIP() async {
-        guard let string = NSPasteboard.general.string(forType: .string) else { return }
-        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard self.isValidIP(trimmed) else { return }
-        logger.info("Clipboard contains IP address \(trimmed), auto-filling and running lookup")
-        self.ipInput = trimmed
-        await self.performLookup()
+        #if os(macOS)
+            guard let string = NSPasteboard.general.string(forType: .string) else { return }
+            let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard self.isValidIP(trimmed) else { return }
+            logger.info("Clipboard contains IP address \(trimmed), auto-filling and running lookup")
+            self.ipInput = trimmed
+            await self.performLookup()
+        #else
+            // iOS: intentionally no-op; we use the system Paste button instead of auto-reading clipboard.
+            return
+        #endif
     }
 
     func lookupMyIP() async {
