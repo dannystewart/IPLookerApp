@@ -1,3 +1,4 @@
+import PolyKit
 import SwiftUI
 
 #if os(macOS)
@@ -368,6 +369,9 @@ struct IPLookerApp: App {
                 ContentView()
             }
             .defaultSize(width: 550, height: 550)
+            .commands {
+                PolyAbout.Commands(info: .init(), currentAnnouncement: nil)
+            }
 
             Settings {
                 SettingsView()
@@ -377,6 +381,10 @@ struct IPLookerApp: App {
                 NavigationStack {
                     ContentView()
                 }
+                .polyAboutSupport(aboutInfo: .init())
+            }
+            .commands {
+                PolyAbout.Commands(info: .init(), currentAnnouncement: nil)
             }
         #endif
     }

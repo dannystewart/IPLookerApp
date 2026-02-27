@@ -1,4 +1,9 @@
+import PolyKit
 import SwiftUI
+
+#if os(iOS)
+    import UIKit
+#endif
 
 // MARK: - SettingsView
 
@@ -25,10 +30,23 @@ struct SettingsView: View {
                     APIKeyRow(service: service)
                 }
             }
+
+            #if os(iOS)
+                if UIDevice.current.userInterfaceIdiom == .phone {
+                    Section {
+                        PolyAboutView(info: .init())
+                    } header: {
+                        Text("About")
+                    }
+                }
+            #endif
         }
         .formStyle(.grouped)
         #if os(macOS)
             .frame(width: 500, height: 420)
+        #endif
+        #if os(iOS)
+        .polyAboutSupport(aboutInfo: .init())
         #endif
     }
 }
