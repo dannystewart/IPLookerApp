@@ -9,6 +9,59 @@ import SwiftUI
 // MARK: - ContentView
 
 struct ContentView: View {
+    // MARK: - ClearableTextField
+
+    private struct ClearableTextField: View {
+        @Binding var text: String
+
+        let titleKey: LocalizedStringKey
+        let isClearButtonVisible: Bool
+        let isClearButtonEnabled: Bool
+        let onSubmit: () -> Void
+        let onClear: () -> Void
+
+        init(
+            _ titleKey: LocalizedStringKey,
+            text: Binding<String>,
+            isClearButtonVisible: Bool,
+            isClearButtonEnabled: Bool = true,
+            onSubmit: @escaping () -> Void,
+            onClear: @escaping () -> Void,
+        ) {
+            self.titleKey = titleKey
+            self._text = text
+            self.isClearButtonVisible = isClearButtonVisible
+            self.isClearButtonEnabled = isClearButtonEnabled
+            self.onSubmit = onSubmit
+            self.onClear = onClear
+        }
+
+        var body: some View {
+            TextField(self.titleKey, text: self.$text)
+                .textFieldStyle(.roundedBorder)
+                .fontDesign(.monospaced)
+                .onSubmit(self.onSubmit)
+                .padding(.trailing, self.isClearButtonVisible ? 26 : 0)
+                .overlay(alignment: .trailing) {
+                    if self.isClearButtonVisible {
+                        Button {
+                            self.onClear()
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!self.isClearButtonEnabled)
+                        .padding(.trailing, 6)
+                        .accessibilityLabel("Clear")
+                        #if os(macOS)
+                            .help("Clear")
+                        #endif
+                    }
+                }
+        }
+    }
+
     @State private var viewModel: LookupViewModel = .init()
     @State private var showCopiedConfirmation = false
     @State private var isShowingSettings = false
@@ -84,11 +137,15 @@ struct ContentView: View {
     #if os(iOS)
         private var lookupRowVertical: some View {
             VStack(spacing: 10) {
-                TextField("Enter IP address", text: self.$viewModel.ipInput)
-                    .textFieldStyle(.roundedBorder)
-                    .fontDesign(.monospaced)
-                    .onSubmit { Task { await self.viewModel.performLookup() } }
-                    .frame(maxWidth: .infinity)
+                ClearableTextField(
+                    "Enter IP address",
+                    text: self.$viewModel.ipInput,
+                    isClearButtonVisible: !self.viewModel.ipInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || self.viewModel.hasResults,
+                    isClearButtonEnabled: !self.viewModel.isLookingUp,
+                    onSubmit: { Task { await self.viewModel.performLookup() } },
+                    onClear: { self.viewModel.clear() },
+                )
+                .frame(maxWidth: .infinity)
 
                 HStack(spacing: 10) {
                     PasteButton(payloadType: String.self) { strings in
@@ -99,10 +156,6 @@ struct ContentView: View {
                     .tint(.blue)
                     .buttonStyle(.plain)
                     .accessibilityLabel("Paste")
-
-                    if self.viewModel.hasResults {
-                        Button("Clear") { self.viewModel.clear() }
-                    }
 
                     Spacer()
 
@@ -121,26 +174,15 @@ struct ContentView: View {
 
     private var lookupRowHorizontal: some View {
         HStack(spacing: 8) {
-            TextField("Enter IP address", text: self.$viewModel.ipInput)
-                .textFieldStyle(.roundedBorder)
-                .fontDesign(.monospaced)
-                .onSubmit {
-                    Task { await self.viewModel.performLookup() }
-                }
-                .frame(maxWidth: .infinity)
-
-            if self.viewModel.hasResults {
-                Button {
-                    self.viewModel.clear()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                #if os(macOS)
-                    .help("Clear results")
-                #endif
-            }
+            ClearableTextField(
+                "Enter IP address",
+                text: self.$viewModel.ipInput,
+                isClearButtonVisible: !self.viewModel.ipInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || self.viewModel.hasResults,
+                isClearButtonEnabled: !self.viewModel.isLookingUp,
+                onSubmit: { Task { await self.viewModel.performLookup() } },
+                onClear: { self.viewModel.clear() },
+            )
+            .frame(maxWidth: .infinity)
 
             Button("Look Up") {
                 Task { await self.viewModel.performLookup() }
