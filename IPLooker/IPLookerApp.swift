@@ -17,6 +17,7 @@ struct ContentView: View {
         let titleKey: LocalizedStringKey
         let isClearButtonVisible: Bool
         let isClearButtonEnabled: Bool
+        let isFocused: FocusState<Bool>.Binding?
         let onSubmit: () -> Void
         let onClear: () -> Void
 
@@ -25,6 +26,7 @@ struct ContentView: View {
             text: Binding<String>,
             isClearButtonVisible: Bool,
             isClearButtonEnabled: Bool = true,
+            isFocused: FocusState<Bool>.Binding? = nil,
             onSubmit: @escaping () -> Void,
             onClear: @escaping () -> Void,
         ) {
@@ -32,12 +34,13 @@ struct ContentView: View {
             self._text = text
             self.isClearButtonVisible = isClearButtonVisible
             self.isClearButtonEnabled = isClearButtonEnabled
+            self.isFocused = isFocused
             self.onSubmit = onSubmit
             self.onClear = onClear
         }
 
         var body: some View {
-            TextField(self.titleKey, text: self.$text)
+            self.textField
                 .textFieldStyle(.roundedBorder)
                 .onSubmit(self.onSubmit)
                 .padding(.trailing, self.isClearButtonVisible ? 26 : 0)
@@ -59,11 +62,36 @@ struct ContentView: View {
                     }
                 }
         }
+
+        @ViewBuilder
+        private var textField: some View {
+            #if os(iOS)
+                if let isFocused = self.isFocused {
+                    TextField(self.titleKey, text: self.$text)
+                        .focused(isFocused)
+                } else {
+                    TextField(self.titleKey, text: self.$text)
+                }
+            #else
+                TextField(self.titleKey, text: self.$text)
+            #endif
+        }
     }
 
     @State private var viewModel: LookupViewModel = .init()
     @State private var showCopiedConfirmation = false
     @State private var isShowingSettings = false
+    #if os(iOS)
+        @FocusState private var isIPFieldFocused: Bool
+    #endif
+
+    private var ipFieldFocusBinding: FocusState<Bool>.Binding? {
+        #if os(iOS)
+            self.$isIPFieldFocused
+        #else
+            nil
+        #endif
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -141,7 +169,11 @@ struct ContentView: View {
                     text: self.$viewModel.ipInput,
                     isClearButtonVisible: !self.viewModel.ipInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || self.viewModel.hasResults,
                     isClearButtonEnabled: !self.viewModel.isLookingUp,
-                    onSubmit: { Task { await self.viewModel.performLookup() } },
+                    isFocused: self.ipFieldFocusBinding,
+                    onSubmit: {
+                        self.dismissKeyboardIfNeeded()
+                        Task { await self.viewModel.performLookup() }
+                    },
                     onClear: { self.viewModel.clear() },
                 )
                 .frame(maxWidth: .infinity)
@@ -149,6 +181,7 @@ struct ContentView: View {
                 Spacer()
 
                 Button("Look Up") {
+                    self.dismissKeyboardIfNeeded()
                     Task { await self.viewModel.performLookup() }
                 }
                 .buttonStyle(.borderedProminent)
@@ -165,12 +198,17 @@ struct ContentView: View {
                 text: self.$viewModel.ipInput,
                 isClearButtonVisible: !self.viewModel.ipInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || self.viewModel.hasResults,
                 isClearButtonEnabled: !self.viewModel.isLookingUp,
-                onSubmit: { Task { await self.viewModel.performLookup() } },
+                isFocused: self.ipFieldFocusBinding,
+                onSubmit: {
+                    self.dismissKeyboardIfNeeded()
+                    Task { await self.viewModel.performLookup() }
+                },
                 onClear: { self.viewModel.clear() },
             )
             .frame(maxWidth: .infinity)
 
             Button("Look Up") {
+                self.dismissKeyboardIfNeeded()
                 Task { await self.viewModel.performLookup() }
             }
             .keyboardShortcut(.defaultAction)
@@ -279,6 +317,9 @@ struct ContentView: View {
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                #if os(iOS)
+                .scrollDismissesKeyboard(.interactively)
+                #endif
                 .frame(maxWidth: .infinity)
             } else if let error = viewModel.errorMessage {
                 VStack(spacing: 8) {
@@ -300,6 +341,20 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        #if os(iOS)
+        .contentShape(Rectangle())
+        .simultaneousGesture(
+            TapGesture().onEnded {
+                self.dismissKeyboardIfNeeded()
+            },
+        )
+        #endif
+    }
+
+    private func dismissKeyboardIfNeeded() {
+        #if os(iOS)
+            self.isIPFieldFocused = false
+        #endif
     }
 }
 
