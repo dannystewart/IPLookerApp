@@ -39,7 +39,6 @@ struct ContentView: View {
         var body: some View {
             TextField(self.titleKey, text: self.$text)
                 .textFieldStyle(.roundedBorder)
-                .fontDesign(.monospaced)
                 .onSubmit(self.onSubmit)
                 .padding(.trailing, self.isClearButtonVisible ? 26 : 0)
                 .overlay(alignment: .trailing) {
