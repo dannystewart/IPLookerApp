@@ -147,26 +147,13 @@ struct ContentView: View {
                 )
                 .frame(maxWidth: .infinity)
 
-                HStack(spacing: 10) {
-                    PasteButton(payloadType: String.self) { strings in
-                        guard let pasted = strings.first else { return }
-                        self.viewModel.ipInput = pasted.trimmingCharacters(in: .whitespacesAndNewlines)
-                    }
-                    .labelStyle(.iconOnly)
-                    .tint(.blue)
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Paste")
+                Spacer()
 
-                    Spacer()
-
-                    Button("Look Up") {
-                        Task { await self.viewModel.performLookup() }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(self.viewModel.ipInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || self.viewModel.isLookingUp)
+                Button("Look Up") {
+                    Task { await self.viewModel.performLookup() }
                 }
-                .controlSize(.small)
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.borderedProminent)
+                .disabled(self.viewModel.ipInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || self.viewModel.isLookingUp)
             }
             .frame(maxWidth: .infinity)
         }
@@ -190,17 +177,6 @@ struct ContentView: View {
             .keyboardShortcut(.defaultAction)
             .buttonStyle(.borderedProminent)
             .disabled(self.viewModel.ipInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || self.viewModel.isLookingUp)
-
-            #if os(iOS)
-                PasteButton(payloadType: String.self) { strings in
-                    guard let pasted = strings.first else { return }
-                    self.viewModel.ipInput = pasted.trimmingCharacters(in: .whitespacesAndNewlines)
-                }
-                .labelStyle(.iconOnly)
-                .tint(.blue)
-                .controlSize(.small)
-                .accessibilityLabel("Paste")
-            #endif
         }
         .frame(maxWidth: .infinity)
     }
