@@ -4,6 +4,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var viewModel: LookupViewModel = .init()
+    @State private var showCopiedConfirmation = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -62,13 +63,32 @@ struct ContentView: View {
                     Text("Detecting...")
                         .foregroundStyle(.secondary)
                 } else if let ip = viewModel.publicIP {
-                    HStack {
+                    HStack(spacing: 4) {
                         Text("Your Public IP:")
                             .fontWeight(.medium)
+                            .padding(.trailing, 4)
 
                         Text(ip)
                             .textSelection(.enabled)
                             .fontDesign(.monospaced)
+
+                        Button {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(ip, forType: .string)
+                            self.showCopiedConfirmation = true
+                            Task {
+                                try? await Task.sleep(for: .seconds(1))
+                                self.showCopiedConfirmation = false
+                            }
+                        } label: {
+                            Image(systemName: self.showCopiedConfirmation ? "checkmark" : "doc.on.doc")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .contentTransition(.symbolEffect(.replace))
+                        }
+                        .buttonStyle(.plain)
+                        .help("Copy to clipboard")
+                        .padding(.leading, 6)
                     }
                 } else {
                     Text("Unavailable")
