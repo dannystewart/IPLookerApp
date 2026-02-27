@@ -14,7 +14,10 @@ struct ContentView: View {
         }
         .frame(minWidth: 500, idealWidth: 560, minHeight: 400, idealHeight: 600)
         .task {
-            await self.viewModel.fetchPublicIP()
+            async let clipboard: Void = self.viewModel.checkClipboardForIP()
+            async let publicIP: Void = self.viewModel.fetchPublicIP()
+            await clipboard
+            await publicIP
         }
     }
 

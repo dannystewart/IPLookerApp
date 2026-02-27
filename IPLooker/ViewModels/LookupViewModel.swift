@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import PolyKit
 import SwiftUI
@@ -56,6 +57,15 @@ final class LookupViewModel {
         logger.info("Lookup complete: \(successCount)/\(results.count) sources returned data")
 
         self.isLookingUp = false
+    }
+
+    func checkClipboardForIP() async {
+        guard let string = NSPasteboard.general.string(forType: .string) else { return }
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard self.isValidIP(trimmed) else { return }
+        logger.info("Clipboard contains IP address \(trimmed), auto-filling and running lookup")
+        self.ipInput = trimmed
+        await self.performLookup()
     }
 
     func lookupMyIP() async {
