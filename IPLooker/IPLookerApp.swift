@@ -7,6 +7,91 @@ import SwiftUI
     import UIKit
 #endif
 
+#if os(macOS)
+    private struct CopyPublicIPCommandAction {
+        let isEnabled: Bool
+        let perform: () -> Void
+    }
+
+    private struct CopyPublicIPCommandActionKey: FocusedValueKey {
+        typealias Value = CopyPublicIPCommandAction
+    }
+
+    fileprivate extension FocusedValues {
+        var copyPublicIPCommandAction: CopyPublicIPCommandAction? {
+            get { self[CopyPublicIPCommandActionKey.self] }
+            set { self[CopyPublicIPCommandActionKey.self] = newValue }
+        }
+    }
+
+    private struct PublicIPCommands: Commands {
+        @FocusedValue(\.copyPublicIPCommandAction) private var copyPublicIPCommandAction
+
+        var body: some Commands {
+            CommandGroup(replacing: .pasteboard) {
+                self.standardEditButton("Cut", systemImage: "scissors", action: #selector(NSText.cut(_:)), shortcut: "x")
+                self.standardEditButton("Copy", systemImage: "doc.on.doc", action: #selector(NSText.copy(_:)), shortcut: "c")
+
+                Button {
+                    self.copyPublicIPCommandAction?.perform()
+                } label: {
+                    Label("Copy Public IP", systemImage: "doc.on.doc")
+                }
+                .keyboardShortcut("c", modifiers: [.command, .option])
+                .disabled(!(self.copyPublicIPCommandAction?.isEnabled ?? false))
+
+                self.standardEditButton("Paste", systemImage: "clipboard", action: #selector(NSText.paste(_:)), shortcut: "v")
+                self.standardEditButton("Delete", systemImage: "trash", action: #selector(NSText.delete(_:)))
+                self.standardEditButton("Select All", systemImage: "character.textbox", action: #selector(NSResponder.selectAll(_:)), shortcut: "a")
+            }
+        }
+
+        @ViewBuilder
+        private func standardEditButton(
+            _ title: String,
+            systemImage: String,
+            action: Selector,
+            shortcut: KeyEquivalent? = nil,
+        ) -> some View {
+            let button = Button {
+                self.performResponderAction(action)
+            } label: {
+                Label(title, systemImage: systemImage)
+            }
+            .disabled(!self.canPerformResponderAction(action))
+
+            if let shortcut {
+                button.keyboardShortcut(shortcut)
+            } else {
+                button
+            }
+        }
+
+        private func performResponderAction(_ action: Selector) {
+            NSApp.sendAction(action, to: nil, from: nil)
+        }
+
+        private func canPerformResponderAction(_ action: Selector) -> Bool {
+            guard let target = NSApp.target(forAction: action, to: nil, from: nil) as AnyObject? else {
+                return false
+            }
+
+            let menuItem = NSMenuItem(title: "", action: action, keyEquivalent: "")
+            menuItem.target = target
+
+            if let validator = target as? NSMenuItemValidation {
+                return validator.validateMenuItem(menuItem)
+            }
+
+            if let validator = target as? NSUserInterfaceValidations {
+                return validator.validateUserInterfaceItem(menuItem)
+            }
+
+            return true
+        }
+    }
+#endif // os(macOS)
+
 // MARK: - ContentView
 
 struct ContentView: View {
@@ -81,6 +166,7 @@ struct ContentView: View {
 
     @State private var viewModel: LookupViewModel = .init()
     @State private var showCopiedConfirmation = false
+    @State private var copyConfirmationTask: Task<Void, Never>? = nil
     @State private var isShowingSettings = false
     #if os(iOS)
         @FocusState private var isIPFieldFocused: Bool
@@ -102,7 +188,7 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         #if os(macOS)
-            .frame(minWidth: 500, idealWidth: 560, minHeight: 400, idealHeight: 600)
+            .frame(minWidth: 300, idealWidth: 360, minHeight: 300, idealHeight: 400)
         #endif
             .task {
                 async let publicIP: Void = self.viewModel.fetchPublicIP()
@@ -137,7 +223,20 @@ struct ContentView: View {
                         }
                 }
             }
-        #endif
+        #endif // os(iOS)
+        #if os(macOS)
+            .focusedSceneValue(
+            \.copyPublicIPCommandAction,
+            .init(
+                isEnabled: self.viewModel.publicIP != nil,
+                perform: self.copyCurrentPublicIP,
+            ),
+        )
+        #endif // os(macOS)
+        .onDisappear {
+            self.copyConfirmationTask?.cancel()
+            self.copyConfirmationTask = nil
+        }
     }
 
     // MARK: - Header
@@ -255,17 +354,7 @@ struct ContentView: View {
                         .fontDesign(.monospaced)
 
                     Button {
-                        #if os(macOS)
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(ip, forType: .string)
-                        #elseif os(iOS)
-                            UIPasteboard.general.string = ip
-                        #endif
-                        self.showCopiedConfirmation = true
-                        Task {
-                            try? await Task.sleep(for: .seconds(1))
-                            self.showCopiedConfirmation = false
-                        }
+                        self.copyCurrentPublicIP()
                     } label: {
                         Image(systemName: self.showCopiedConfirmation ? "checkmark" : "doc.on.doc")
                             .font(.caption)
@@ -357,12 +446,34 @@ struct ContentView: View {
             self.isIPFieldFocused = false
         #endif
     }
+
+    private func copyCurrentPublicIP() {
+        guard let publicIP = self.viewModel.publicIP else { return }
+        #if os(macOS)
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(publicIP, forType: .string)
+        #elseif os(iOS)
+            UIPasteboard.general.string = publicIP
+        #endif
+        logger.info("Copied current public IP \(publicIP) to clipboard")
+        self.showCopiedConfirmation = true
+        self.copyConfirmationTask?.cancel()
+        self.copyConfirmationTask = Task {
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            self.showCopiedConfirmation = false
+            self.copyConfirmationTask = nil
+        }
+    }
 }
 
 // MARK: - IPLookerApp
 
 @main
 struct IPLookerApp: App {
+    #if os(macOS)
+    #endif
+
     var body: some Scene {
         #if os(macOS)
             WindowGroup {
@@ -371,6 +482,7 @@ struct IPLookerApp: App {
             .defaultSize(width: 550, height: 550)
             .commands {
                 PolyAbout.Commands(info: .init(), currentAnnouncement: nil)
+                PublicIPCommands()
             }
 
             Settings {
