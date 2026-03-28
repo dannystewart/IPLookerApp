@@ -4,60 +4,16 @@
       "path": "."
     },
     {
-      "path": "../polykit-swift"
+      "path": "../../polykit-swift"
     },
     {
-      "path": "../iplooker"
-    },
-    {
-      "path": "../homebrew-apps"
+      "path": "../../homebrew-apps"
     }
   ],
   "settings": {
     "editor.detectIndentation": false,
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,
-    "explorerExclude.backup": {
-      "**/*.xcodeproj": true,
-      "**/.DS_Store": true,
-      "**/.git": true,
-      "**/.hg": false,
-      "**/.plugin_symlinks": true,
-      "**/.pytest_cache": true,
-      "**/.svn": false,
-      "**/.symlinks": true,
-      "**/.vscode": true,
-      "**/.windsurf": true,
-      "**/__pycache__": true,
-      "**/Assets.xcassets": true,
-      "**/CVS": false,
-      "**/flutter/ephemeral": true,
-      "**/Flutter/ephemeral": true,
-      "**/Generated": true,
-      "**/node_modules": true,
-      "**/Thumbs.db": true,
-      "*.code-workspace": true,
-      "*.icon": true,
-      "*.sh": true,
-      ".build": true,
-      ".claude": true,
-      ".cursor": true,
-      ".cursorindexingignore": true,
-      ".github": true,
-      ".gitignore": true,
-      ".history": true,
-      ".pre-commit-config.yaml": true,
-      ".swiftpm": true,
-      "build": true,
-      "Build": true,
-      "ci_scripts": true,
-      "config": true,
-      "Config": false,
-      "env*": true,
-      "Package.resolved": true,
-      "venv": true,
-      "WARP.md": true
-    },
     "files.exclude": {
       "**/*.xcodeproj": true,
       "**/.DS_Store": true,
@@ -90,6 +46,7 @@
       "ci_scripts": true,
       "env*": true,
       "Package.resolved": true,
+      "releases": true,
       "venv": true,
       "WARP.md": true
     },
