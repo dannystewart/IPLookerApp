@@ -3,6 +3,17 @@ import SwiftUI
 
 #if os(macOS)
     import AppKit
+
+    final class AppDelegate: NSObject, NSApplicationDelegate {
+        func applicationShouldOpenUntitledFile(_: NSApplication) -> Bool {
+            false
+        }
+
+        func applicationSupportsSecureRestorableState(_: NSApplication) -> Bool {
+            false
+        }
+    }
+
 #elseif os(iOS)
     import UIKit
 #endif
@@ -125,6 +136,10 @@ import SwiftUI
         private func updateWindow(from view: NSView) {
             guard let window = view.window else { return }
             window.level = self.isAlwaysOnTop ? .floating : .normal
+            window.isRestorable = false
+            window.identifier = nil
+            window.restorationClass = nil
+            window.tabbingMode = .disallowed
         }
     }
 #endif // os(macOS)
