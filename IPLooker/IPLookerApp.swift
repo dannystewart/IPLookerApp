@@ -17,10 +17,28 @@ import SwiftUI
         typealias Value = CopyPublicIPCommandAction
     }
 
+    private struct WindowFloatingState {
+        let get: () -> Bool
+        let set: (Bool) -> Void
+
+        var isFloating: Bool {
+            self.get()
+        }
+    }
+
+    private struct WindowFloatingStateKey: FocusedValueKey {
+        typealias Value = WindowFloatingState
+    }
+
     fileprivate extension FocusedValues {
         var copyPublicIPCommandAction: CopyPublicIPCommandAction? {
             get { self[CopyPublicIPCommandActionKey.self] }
             set { self[CopyPublicIPCommandActionKey.self] = newValue }
+        }
+
+        var windowFloatingState: WindowFloatingState? {
+            get { self[WindowFloatingStateKey.self] }
+            set { self[WindowFloatingStateKey.self] = newValue }
         }
     }
 
@@ -28,9 +46,8 @@ import SwiftUI
         @FocusedValue(\.copyPublicIPCommandAction) private var copyPublicIPCommandAction
 
         var body: some Commands {
-            CommandGroup(replacing: .pasteboard) {
-                self.standardEditButton("Cut", systemImage: "scissors", action: #selector(NSText.cut(_:)), shortcut: "x")
-                self.standardEditButton("Copy", systemImage: "doc.on.doc", action: #selector(NSText.copy(_:)), shortcut: "c")
+            CommandGroup(after: .pasteboard) {
+                Divider()
 
                 Button {
                     self.copyPublicIPCommandAction?.perform()
@@ -39,55 +56,75 @@ import SwiftUI
                 }
                 .keyboardShortcut("c", modifiers: [.command, .option])
                 .disabled(!(self.copyPublicIPCommandAction?.isEnabled ?? false))
+            }
+        }
+    }
 
-                self.standardEditButton("Paste", systemImage: "clipboard", action: #selector(NSText.paste(_:)), shortcut: "v")
-                self.standardEditButton("Delete", systemImage: "trash", action: #selector(NSText.delete(_:)))
-                self.standardEditButton("Select All", systemImage: "character.textbox", action: #selector(NSResponder.selectAll(_:)), shortcut: "a")
+    private struct WindowCommands: Commands {
+        @Environment(\.openWindow) private var openWindow
+        @FocusedValue(\.windowFloatingState) private var windowFloatingState
+
+        var body: some Commands {
+            CommandGroup(replacing: .newItem) {
+                Button {
+                    self.openWindow(id: "main")
+                } label: {
+                    Label("New Window", systemImage: "macwindow.badge.plus")
+                }
+                .keyboardShortcut("n")
+            }
+
+            CommandGroup(after: .windowArrangement) {
+                Toggle(
+                    isOn: Binding(
+                        get: { self.windowFloatingState?.isFloating ?? false },
+                        set: { self.windowFloatingState?.set($0) },
+                    ),
+                ) {
+                    Label("Always on Top", systemImage: "pin.circle")
+                }
+                .keyboardShortcut("t", modifiers: [.control, .command])
+                .disabled(self.windowFloatingState == nil)
+            }
+        }
+    }
+
+    private struct WindowConfigurationModifier: ViewModifier {
+        @State private var isAlwaysOnTop = false
+
+        func body(content: Content) -> some View {
+            content
+                .background(WindowAccessor(isAlwaysOnTop: self.$isAlwaysOnTop))
+                .focusedSceneValue(
+                    \.windowFloatingState,
+                    .init(
+                        get: { self.isAlwaysOnTop },
+                        set: { self.isAlwaysOnTop = $0 },
+                    ),
+                )
+        }
+    }
+
+    private struct WindowAccessor: NSViewRepresentable {
+        @Binding var isAlwaysOnTop: Bool
+
+        func makeNSView(context _: Context) -> NSView {
+            let view = NSView()
+            DispatchQueue.main.async {
+                self.updateWindow(from: view)
+            }
+            return view
+        }
+
+        func updateNSView(_ nsView: NSView, context _: Context) {
+            DispatchQueue.main.async {
+                self.updateWindow(from: nsView)
             }
         }
 
-        @ViewBuilder
-        private func standardEditButton(
-            _ title: String,
-            systemImage: String,
-            action: Selector,
-            shortcut: KeyEquivalent? = nil,
-        ) -> some View {
-            let button = Button {
-                self.performResponderAction(action)
-            } label: {
-                Label(title, systemImage: systemImage)
-            }
-            .disabled(!self.canPerformResponderAction(action))
-
-            if let shortcut {
-                button.keyboardShortcut(shortcut)
-            } else {
-                button
-            }
-        }
-
-        private func performResponderAction(_ action: Selector) {
-            NSApp.sendAction(action, to: nil, from: nil)
-        }
-
-        private func canPerformResponderAction(_ action: Selector) -> Bool {
-            guard let target = NSApp.target(forAction: action, to: nil, from: nil) as AnyObject? else {
-                return false
-            }
-
-            let menuItem = NSMenuItem(title: "", action: action, keyEquivalent: "")
-            menuItem.target = target
-
-            if let validator = target as? NSMenuItemValidation {
-                return validator.validateMenuItem(menuItem)
-            }
-
-            if let validator = target as? NSUserInterfaceValidations {
-                return validator.validateUserInterfaceItem(menuItem)
-            }
-
-            return true
+        private func updateWindow(from view: NSView) {
+            guard let window = view.window else { return }
+            window.level = self.isAlwaysOnTop ? .floating : .normal
         }
     }
 #endif // os(macOS)
@@ -476,13 +513,15 @@ struct IPLookerApp: App {
 
     var body: some Scene {
         #if os(macOS)
-            WindowGroup {
+            WindowGroup(id: "main") {
                 ContentView()
+                    .modifier(WindowConfigurationModifier())
             }
             .defaultSize(width: 550, height: 550)
             .commands {
                 PolyAbout.Commands(info: .init(), currentAnnouncement: nil)
                 PublicIPCommands()
+                WindowCommands()
             }
 
             Settings {
