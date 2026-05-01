@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - AggregatedResult
 
-struct AggregatedResult: Sendable {
+struct AggregatedResult {
     var city: String? = nil
     var region: String? = nil
     var country: String? = nil

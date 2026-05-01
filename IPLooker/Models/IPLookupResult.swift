@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - IPLookupResult
 
-struct IPLookupResult: Sendable {
+struct IPLookupResult {
     let ip: String
     let source: String
 
@@ -26,7 +26,7 @@ struct IPLookupResult: Sendable {
 
 // MARK: - SourceStatus
 
-enum SourceStatus: Sendable {
+enum SourceStatus {
     case success(IPLookupResult)
     case failed(reason: String)
     case skipped(reason: String)
@@ -34,7 +34,7 @@ enum SourceStatus: Sendable {
 
 // MARK: - SourceResult
 
-struct SourceResult: Identifiable, Sendable {
+struct SourceResult: Identifiable {
     let id: String
     let sourceName: String
     let status: SourceStatus

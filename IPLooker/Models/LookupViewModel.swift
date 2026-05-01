@@ -71,7 +71,7 @@ final class LookupViewModel {
             self.ipInput = trimmed
             await self.performLookup()
         #else
-            // iOS: intentionally no-op; we use the system Paste button instead of auto-reading clipboard.
+            // iOS uses the system Paste button instead of auto-reading the clipboard.
             return
         #endif
     }
