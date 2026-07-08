@@ -100,6 +100,11 @@ import SwiftUI
         }
     }
 
+    private enum WindowMetrics {
+        static let minimumSize: CGSize = .init(width: 440, height: 400)
+        static let defaultSize: CGSize = .init(width: 550, height: 550)
+    }
+
     private struct WindowConfigurationModifier: ViewModifier {
         @State private var isAlwaysOnTop = false
 
@@ -135,6 +140,7 @@ import SwiftUI
 
         private func updateWindow(from view: NSView) {
             guard let window = view.window else { return }
+            window.minSize = WindowMetrics.minimumSize
             window.level = self.isAlwaysOnTop ? .floating : .normal
             window.isRestorable = false
             window.identifier = nil
@@ -216,7 +222,7 @@ struct ContentView: View {
         }
     }
 
-    @State private var viewModel: LookupViewModel = .init()
+    @State private var viewModel: LookupViewModel
     @State private var showCopiedConfirmation = false
     @State private var copyConfirmationTask: Task<Void, Never>? = nil
     @State private var isShowingSettings = false
@@ -232,6 +238,80 @@ struct ContentView: View {
         #endif
     }
 
+    #if os(macOS)
+        @ToolbarContentBuilder
+        private var browserToolbar: some ToolbarContent {
+            ToolbarItemGroup(placement: .navigation) {
+                Button {
+                    Task { await self.viewModel.goBack() }
+                } label: {
+                    Image(systemName: "chevron.left")
+                }
+                .disabled(!self.viewModel.canGoBack || self.viewModel.isLookingUp)
+                .help("Back")
+
+                Button {
+                    Task { await self.viewModel.goForward() }
+                } label: {
+                    Image(systemName: "chevron.right")
+                }
+                .disabled(!self.viewModel.canGoForward || self.viewModel.isLookingUp)
+                .help("Forward")
+            }
+
+            ToolbarItemGroup(placement: .principal) {
+                TextField("Enter IP address", text: self.$viewModel.ipInput)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 150)
+                    .disabled(self.viewModel.isLookingUp)
+                    .onSubmit {
+                        Task { await self.viewModel.performLookup() }
+                    }
+
+                Button {
+                    Task { await self.viewModel.refreshLookup() }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .keyboardShortcut("r", modifiers: .command)
+                .disabled(self.viewModel.lookupIP == nil || self.viewModel.isLookingUp)
+                .help("Refresh")
+            }
+
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    if self.viewModel.historyEntries.isEmpty {
+                        Text("No History")
+                    } else {
+                        ForEach(self.viewModel.historyEntries.reversed()) { entry in
+                            Button {
+                                Task { await self.viewModel.selectHistoryEntry(entry) }
+                            } label: {
+                                Label(entry.ip, systemImage: entry.ip == self.viewModel.lookupIP ? "checkmark" : "network")
+                            }
+                        }
+                    }
+
+                    Divider()
+
+                    Button("Clear History", role: .destructive) {
+                        self.viewModel.clearHistory()
+                    }
+                    .disabled(!self.viewModel.hasHistory)
+                } label: {
+                    Image(systemName: "clock")
+                }
+                .menuStyle(.button)
+                .disabled(self.viewModel.isLookingUp)
+                .help("History")
+            }
+        }
+    #endif // os(macOS)
+
+    init(history: LookupHistoryStore = .init()) {
+        self._viewModel = State(initialValue: LookupViewModel(history: history))
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             self.headerArea
@@ -240,8 +320,13 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         #if os(macOS)
-            .frame(minWidth: 300, idealWidth: 360, minHeight: 300, idealHeight: 400)
-        #endif
+            .frame(
+                minWidth: WindowMetrics.minimumSize.width,
+                idealWidth: WindowMetrics.defaultSize.width,
+                minHeight: WindowMetrics.minimumSize.height,
+                idealHeight: 400,
+            )
+        #endif // os(macOS)
             .task {
                 async let publicIP: Void = self.viewModel.fetchPublicIP()
                 #if os(macOS)
@@ -277,7 +362,10 @@ struct ContentView: View {
             }
         #endif // os(iOS)
         #if os(macOS)
-            .focusedSceneValue(
+            .toolbar {
+            self.browserToolbar
+        }
+        .focusedSceneValue(
             \.copyPublicIPCommandAction,
             .init(
                 isEnabled: self.viewModel.publicIP != nil,
@@ -295,7 +383,9 @@ struct ContentView: View {
 
     private var headerArea: some View {
         VStack(spacing: 12) {
-            self.lookupRow
+            #if os(iOS)
+                self.lookupRow
+            #endif
             self.publicIPRow
         }
         .padding()
@@ -341,7 +431,7 @@ struct ContentView: View {
             }
             .frame(maxWidth: .infinity)
         }
-    #endif
+    #endif // os(iOS)
 
     private var lookupRowHorizontal: some View {
         HStack(spacing: 8) {
@@ -386,7 +476,7 @@ struct ContentView: View {
             }
         }
         #if os(macOS)
-        .frame(height: 20)
+        .frame(height: 10)
         #endif
     }
 
@@ -490,7 +580,7 @@ struct ContentView: View {
                 self.dismissKeyboardIfNeeded()
             },
         )
-        #endif
+        #endif // os(iOS)
     }
 
     private func dismissKeyboardIfNeeded() {
@@ -523,16 +613,17 @@ struct ContentView: View {
 
 @main
 struct IPLookerApp: App {
-    #if os(macOS)
-    #endif
+    @State private var lookupHistory: LookupHistoryStore = .init()
 
     var body: some Scene {
         #if os(macOS)
             WindowGroup(id: "main") {
-                ContentView()
+                ContentView(history: self.lookupHistory)
                     .modifier(WindowConfigurationModifier())
             }
-            .defaultSize(width: 550, height: 550)
+            .defaultSize(width: WindowMetrics.defaultSize.width, height: WindowMetrics.defaultSize.height)
+            .windowToolbarStyle(.unified(showsTitle: false))
+            .windowToolbarLabelStyle(fixed: .iconOnly)
             .commands {
                 PolyAbout.Commands(info: .init(), currentAnnouncement: nil)
                 PublicIPCommands()
@@ -545,7 +636,7 @@ struct IPLookerApp: App {
         #else
             WindowGroup {
                 NavigationStack {
-                    ContentView()
+                    ContentView(history: self.lookupHistory)
                 }
                 .polyAboutSupport(aboutInfo: .init())
             }

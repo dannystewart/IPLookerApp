@@ -21,9 +21,30 @@ final class LookupViewModel {
     var errorMessage: String? = nil
 
     private let service: IPLookupService = .shared
+    private let history: LookupHistoryStore
 
     var hasResults: Bool {
         self.aggregatedResult != nil
+    }
+
+    var historyEntries: [LookupHistoryEntry] {
+        self.history.entries
+    }
+
+    var canGoBack: Bool {
+        self.history.canGoBack
+    }
+
+    var canGoForward: Bool {
+        self.history.canGoForward
+    }
+
+    var hasHistory: Bool {
+        !self.history.entries.isEmpty
+    }
+
+    init(history: LookupHistoryStore = .init()) {
+        self.history = history
     }
 
     func fetchPublicIP() async {
@@ -35,31 +56,36 @@ final class LookupViewModel {
     }
 
     func performLookup() async {
-        let ip = self.ipInput.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !ip.isEmpty else {
-            self.errorMessage = "Please enter an IP address."
-            return
-        }
-        guard self.isValidIP(ip) else {
-            self.errorMessage = "Invalid IP address format."
-            return
-        }
+        await self.performLookup(recordInHistory: true)
+    }
 
-        self.errorMessage = nil
-        self.isLookingUp = true
-        self.lookupIP = ip
+    func refreshLookup() async {
+        let ip = self.lookupIP ?? self.ipInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !ip.isEmpty else { return }
+        self.ipInput = ip
+        await self.performLookup(recordInHistory: false)
+    }
 
-        logger.info("Starting lookup for \(ip)")
+    func goBack() async {
+        guard let ip = self.history.goBack() else { return }
+        self.ipInput = ip
+        await self.performLookup(recordInHistory: false)
+    }
 
-        let results = await service.lookupIP(ip)
+    func goForward() async {
+        guard let ip = self.history.goForward() else { return }
+        self.ipInput = ip
+        await self.performLookup(recordInHistory: false)
+    }
 
-        self.sourceResults = results.sorted { $0.sourceName < $1.sourceName }
-        self.aggregatedResult = ResultAggregator.aggregate(self.sourceResults)
+    func selectHistoryEntry(_ entry: LookupHistoryEntry) async {
+        guard let ip = self.history.selectEntry(id: entry.id) else { return }
+        self.ipInput = ip
+        await self.performLookup(recordInHistory: false)
+    }
 
-        let successCount = results.filter(\.isSuccess).count
-        logger.info("Lookup complete: \(successCount)/\(results.count) sources returned data")
-
-        self.isLookingUp = false
+    func clearHistory() {
+        self.history.clear()
     }
 
     func checkClipboardForIP() async {
@@ -88,6 +114,38 @@ final class LookupViewModel {
         self.lookupIP = nil
         self.errorMessage = nil
         self.ipInput = ""
+    }
+
+    private func performLookup(recordInHistory: Bool) async {
+        let ip = self.ipInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !ip.isEmpty else {
+            self.errorMessage = "Please enter an IP address."
+            return
+        }
+        guard self.isValidIP(ip) else {
+            self.errorMessage = "Invalid IP address format."
+            return
+        }
+
+        self.errorMessage = nil
+        self.isLookingUp = true
+        self.lookupIP = ip
+
+        if recordInHistory {
+            self.history.recordLookup(ip)
+        }
+
+        logger.info("Starting lookup for \(ip)")
+
+        let results = await service.lookupIP(ip)
+
+        self.sourceResults = results.sorted { $0.sourceName < $1.sourceName }
+        self.aggregatedResult = ResultAggregator.aggregate(self.sourceResults)
+
+        let successCount = results.filter(\.isSuccess).count
+        logger.info("Lookup complete: \(successCount)/\(results.count) sources returned data")
+
+        self.isLookingUp = false
     }
 
     private func isValidIP(_ ip: String) -> Bool {
