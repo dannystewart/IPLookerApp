@@ -52,11 +52,11 @@ struct SourceResult: Identifiable {
     var statusDescription: String {
         switch self.status {
         case .success:
-            return "OK"
+            "OK"
         case let .failed(reason):
-            return reason
+            reason
         case let .skipped(reason):
-            return reason
+            reason
         }
     }
 }
