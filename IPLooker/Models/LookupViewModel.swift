@@ -11,7 +11,15 @@ import SwiftUI
 @MainActor
 @Observable
 final class LookupViewModel {
-    var ipInput = ""
+    var ipInput = "" {
+        didSet {
+            let trimmed = self.ipInput.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed != self.ipInput {
+                self.ipInput = trimmed
+            }
+        }
+    }
+
     var publicIP: String? = nil
     var isLoadingPublicIP = false
     var isLookingUp = false

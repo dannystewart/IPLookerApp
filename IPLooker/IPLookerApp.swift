@@ -186,6 +186,7 @@ struct ContentView: View {
         var body: some View {
             self.textField
                 .textFieldStyle(.roundedBorder)
+                .lineLimit(1)
                 .onSubmit(self.onSubmit)
                 .padding(.trailing, self.isClearButtonVisible ? 26 : 0)
                 .overlay(alignment: .trailing) {
@@ -262,6 +263,7 @@ struct ContentView: View {
             ToolbarItemGroup(placement: .principal) {
                 TextField("Enter IP address", text: self.$viewModel.ipInput)
                     .textFieldStyle(.roundedBorder)
+                    .lineLimit(1)
                     .frame(width: 150)
                     .disabled(self.viewModel.isLookingUp)
                     .onSubmit {
