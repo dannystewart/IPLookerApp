@@ -28,6 +28,14 @@ import SwiftUI
         typealias Value = CopyPublicIPCommandAction
     }
 
+    private struct FocusIPFieldAction {
+        let perform: () -> Void
+    }
+
+    private struct FocusIPFieldActionKey: FocusedValueKey {
+        typealias Value = FocusIPFieldAction
+    }
+
     private struct WindowFloatingState {
         let get: () -> Bool
         let set: (Bool) -> Void
@@ -47,9 +55,30 @@ import SwiftUI
             set { self[CopyPublicIPCommandActionKey.self] = newValue }
         }
 
+        var focusIPFieldAction: FocusIPFieldAction? {
+            get { self[FocusIPFieldActionKey.self] }
+            set { self[FocusIPFieldActionKey.self] = newValue }
+        }
+
         var windowFloatingState: WindowFloatingState? {
             get { self[WindowFloatingStateKey.self] }
             set { self[WindowFloatingStateKey.self] = newValue }
+        }
+    }
+
+    private struct IPFieldCommands: Commands {
+        @FocusedValue(\.focusIPFieldAction) private var focusIPFieldAction
+
+        var body: some Commands {
+            CommandGroup(after: .textEditing) {
+                Button {
+                    self.focusIPFieldAction?.perform()
+                } label: {
+                    Label("Focus IP Address Field", systemImage: "magnifyingglass")
+                }
+                .keyboardShortcut("f", modifiers: .command)
+                .disabled(self.focusIPFieldAction == nil)
+            }
         }
     }
 
@@ -107,10 +136,11 @@ import SwiftUI
 
     private struct WindowConfigurationModifier: ViewModifier {
         @State private var isAlwaysOnTop = false
+        @State private var window: NSWindow?
 
         func body(content: Content) -> some View {
             content
-                .background(WindowAccessor(isAlwaysOnTop: self.$isAlwaysOnTop))
+                .background(WindowAccessor(isAlwaysOnTop: self.$isAlwaysOnTop, window: self.$window))
                 .focusedSceneValue(
                     \.windowFloatingState,
                     .init(
@@ -118,11 +148,31 @@ import SwiftUI
                         set: { self.isAlwaysOnTop = $0 },
                     ),
                 )
+                .focusedSceneValue(
+                    \.focusIPFieldAction,
+                    .init(perform: { self.window?.focusIPInputField() }),
+                )
+                .task(id: self.window) {
+                    await self.focusIPFieldOnLaunch()
+                }
+        }
+
+        /// The toolbar is populated asynchronously after the window appears, so the field may not
+        /// exist yet on the first attempt. Retry briefly until it can take first responder.
+        private func focusIPFieldOnLaunch() async {
+            guard let window = self.window else { return }
+            for _ in 0 ..< 20 {
+                if window.focusIPInputField() { return }
+                try? await Task.sleep(for: .milliseconds(50))
+                if Task.isCancelled { return }
+            }
+            logger.warning("Could not focus the IP input field on launch")
         }
     }
 
     private struct WindowAccessor: NSViewRepresentable {
         @Binding var isAlwaysOnTop: Bool
+        @Binding var window: NSWindow?
 
         func makeNSView(context _: Context) -> NSView {
             let view = NSView()
@@ -146,6 +196,43 @@ import SwiftUI
             window.identifier = nil
             window.restorationClass = nil
             window.tabbingMode = .disallowed
+            if self.window !== window {
+                self.window = window
+            }
+        }
+    }
+
+    private extension NSWindow {
+        /// SwiftUI's `@FocusState` can't reach a `TextField` inside a `ToolbarItem`, because the
+        /// toolbar is hosted outside the content view's hierarchy. Move first responder directly.
+        @discardableResult
+        func focusIPInputField() -> Bool {
+            guard let field = self.ipInputField else { return false }
+            guard self.firstResponder !== field.currentEditor() else { return true }
+            return self.makeFirstResponder(field)
+        }
+
+        private var ipInputField: NSTextField? {
+            let toolbarFields = (self.toolbar?.items ?? []).compactMap { item in
+                item.view.flatMap { Self.firstEditableTextField(in: $0) }
+            }
+            if let field = toolbarFields.first { return field }
+            // Fall back to the whole window hierarchy, which includes the titlebar accessory
+            // views that host SwiftUI toolbar content.
+            guard let root = self.contentView?.superview ?? self.contentView else { return nil }
+            return Self.firstEditableTextField(in: root)
+        }
+
+        private static func firstEditableTextField(in view: NSView) -> NSTextField? {
+            if let field = view as? NSTextField, field.isEditable {
+                return field
+            }
+            for subview in view.subviews {
+                if let field = self.firstEditableTextField(in: subview) {
+                    return field
+                }
+            }
+            return nil
         }
     }
 #endif // os(macOS)
@@ -161,7 +248,7 @@ struct ContentView: View {
         let titleKey: LocalizedStringKey
         let isClearButtonVisible: Bool
         let isClearButtonEnabled: Bool
-        let isFocused: FocusState<Bool>.Binding?
+        let isFocused: FocusState<Bool>.Binding
         let onSubmit: () -> Void
         let onClear: () -> Void
 
@@ -170,7 +257,7 @@ struct ContentView: View {
             text: Binding<String>,
             isClearButtonVisible: Bool,
             isClearButtonEnabled: Bool = true,
-            isFocused: FocusState<Bool>.Binding? = nil,
+            isFocused: FocusState<Bool>.Binding,
             onSubmit: @escaping () -> Void,
             onClear: @escaping () -> Void,
         ) {
@@ -184,7 +271,8 @@ struct ContentView: View {
         }
 
         var body: some View {
-            self.textField
+            TextField(self.titleKey, text: self.$text)
+                .focused(self.isFocused)
                 .textFieldStyle(.roundedBorder)
                 .lineLimit(1)
                 .onSubmit(self.onSubmit)
@@ -207,37 +295,13 @@ struct ContentView: View {
                     }
                 }
         }
-
-        @ViewBuilder
-        private var textField: some View {
-            #if os(iOS)
-                if let isFocused = self.isFocused {
-                    TextField(self.titleKey, text: self.$text)
-                        .focused(isFocused)
-                } else {
-                    TextField(self.titleKey, text: self.$text)
-                }
-            #else
-                TextField(self.titleKey, text: self.$text)
-            #endif
-        }
     }
 
     @State private var viewModel: LookupViewModel
     @State private var showCopiedConfirmation = false
     @State private var copyConfirmationTask: Task<Void, Never>? = nil
     @State private var isShowingSettings = false
-    #if os(iOS)
-        @FocusState private var isIPFieldFocused: Bool
-    #endif
-
-    private var ipFieldFocusBinding: FocusState<Bool>.Binding? {
-        #if os(iOS)
-            self.$isIPFieldFocused
-        #else
-            nil
-        #endif
-    }
+    @FocusState private var isIPFieldFocused: Bool
 
     #if os(macOS)
         @ToolbarContentBuilder
@@ -330,6 +394,9 @@ struct ContentView: View {
             )
         #endif // os(macOS)
             .task {
+                #if os(iOS)
+                    self.isIPFieldFocused = true
+                #endif
                 async let publicIP: Void = self.viewModel.fetchPublicIP()
                 #if os(macOS)
                     async let clipboard: Void = self.viewModel.checkClipboardForIP()
@@ -413,7 +480,7 @@ struct ContentView: View {
                     text: self.$viewModel.ipInput,
                     isClearButtonVisible: !self.viewModel.ipInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || self.viewModel.hasResults,
                     isClearButtonEnabled: !self.viewModel.isLookingUp,
-                    isFocused: self.ipFieldFocusBinding,
+                    isFocused: self.$isIPFieldFocused,
                     onSubmit: {
                         self.dismissKeyboardIfNeeded()
                         Task { await self.viewModel.performLookup() }
@@ -442,7 +509,7 @@ struct ContentView: View {
                 text: self.$viewModel.ipInput,
                 isClearButtonVisible: !self.viewModel.ipInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || self.viewModel.hasResults,
                 isClearButtonEnabled: !self.viewModel.isLookingUp,
-                isFocused: self.ipFieldFocusBinding,
+                isFocused: self.$isIPFieldFocused,
                 onSubmit: {
                     self.dismissKeyboardIfNeeded()
                     Task { await self.viewModel.performLookup() }
@@ -629,6 +696,7 @@ struct IPLookerApp: App {
             .commands {
                 PolyAbout.Commands(info: .init(), currentAnnouncement: nil)
                 PublicIPCommands()
+                IPFieldCommands()
                 WindowCommands()
             }
 
