@@ -20,13 +20,13 @@ final class LookupViewModel {
         }
     }
 
-    var publicIP: String? = nil
+    var publicIP: String?
     var isLoadingPublicIP = false
     var isLookingUp = false
     var sourceResults: [SourceResult] = []
-    var aggregatedResult: AggregatedResult? = nil
-    var lookupIP: String? = nil
-    var errorMessage: String? = nil
+    var aggregatedResult: AggregatedResult?
+    var lookupIP: String?
+    var errorMessage: String?
 
     private let service: IPLookupService = .shared
     private let history: LookupHistoryStore
@@ -107,7 +107,7 @@ final class LookupViewModel {
         #else
             // iOS uses the system Paste button instead of auto-reading the clipboard.
             return
-        #endif
+        #endif // os(macOS)
     }
 
     func lookupMyIP() async {

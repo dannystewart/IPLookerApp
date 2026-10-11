@@ -16,7 +16,7 @@ import SwiftUI
 
 #elseif os(iOS)
     import UIKit
-#endif
+#endif // os(macOS)
 
 #if os(macOS)
     private struct CopyPublicIPCommandAction {
@@ -217,8 +217,8 @@ import SwiftUI
                 item.view.flatMap { Self.firstEditableTextField(in: $0) }
             }
             if let field = toolbarFields.first { return field }
-            // Fall back to the whole window hierarchy, which includes the titlebar accessory
-            // views that host SwiftUI toolbar content.
+            // Fall back to the whole window hierarchy, which includes the titlebar accessory views
+            // that host SwiftUI toolbar content.
             guard let root = self.contentView?.superview ?? self.contentView else { return nil }
             return Self.firstEditableTextField(in: root)
         }
@@ -469,7 +469,7 @@ struct ContentView: View {
             }
         #else
             self.lookupRowHorizontal
-        #endif
+        #endif // os(iOS)
     }
 
     #if os(iOS)
@@ -713,7 +713,7 @@ struct IPLookerApp: App {
             .commands {
                 PolyAbout.Commands(info: .init(), currentAnnouncement: nil)
             }
-        #endif
+        #endif // os(macOS)
     }
 }
 

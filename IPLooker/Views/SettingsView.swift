@@ -39,7 +39,7 @@ struct SettingsView: View {
                         Text("About")
                     }
                 }
-            #endif
+            #endif // os(iOS)
         }
         .formStyle(.grouped)
         #if os(macOS)

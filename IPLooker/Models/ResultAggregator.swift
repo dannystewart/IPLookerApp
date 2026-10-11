@@ -3,17 +3,17 @@ import Foundation
 // MARK: - AggregatedResult
 
 struct AggregatedResult {
-    var city: String? = nil
-    var region: String? = nil
-    var country: String? = nil
-    var isp: String? = nil
-    var org: String? = nil
-    var asn: String? = nil
-    var asnName: String? = nil
-    var ipRange: String? = nil
+    var city: String?
+    var region: String?
+    var country: String?
+    var isp: String?
+    var org: String?
+    var asn: String?
+    var asnName: String?
+    var ipRange: String?
 
     var isVPN: Bool
-    var vpnService: String? = nil
+    var vpnService: String?
     var isProxy: Bool
     var isTor: Bool
     var isDatacenter: Bool

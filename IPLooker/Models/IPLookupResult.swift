@@ -6,22 +6,22 @@ struct IPLookupResult {
     let ip: String
     let source: String
 
-    var country: String? = nil
-    var region: String? = nil
-    var city: String? = nil
-    var isp: String? = nil
-    var org: String? = nil
+    var country: String?
+    var region: String?
+    var city: String?
+    var isp: String?
+    var org: String?
 
-    var asn: String? = nil
-    var asnName: String? = nil
-    var ipRange: String? = nil
+    var asn: String?
+    var asnName: String?
+    var ipRange: String?
 
-    var isVPN: Bool? = nil
-    var vpnService: String? = nil
-    var isProxy: Bool? = nil
-    var isTor: Bool? = nil
-    var isDatacenter: Bool? = nil
-    var isAnonymous: Bool? = nil
+    var isVPN: Bool?
+    var vpnService: String?
+    var isProxy: Bool?
+    var isTor: Bool?
+    var isDatacenter: Bool?
+    var isAnonymous: Bool?
 }
 
 // MARK: - SourceStatus

@@ -13,7 +13,7 @@ struct LookupHistoryEntry: Identifiable, Hashable {
 @Observable
 final class LookupHistoryStore {
     private(set) var entries: [LookupHistoryEntry] = []
-    private(set) var currentIndex: Int? = nil
+    private(set) var currentIndex: Int?
 
     var canGoBack: Bool {
         guard let currentIndex else { return false }
