@@ -19,7 +19,10 @@ actor IPLookupService {
         do {
             let url = URL(string: "https://api.ipify.org")!
             let (data, response) = try await URLSession.shared.data(from: url)
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            guard
+                let httpResponse = response as? HTTPURLResponse,
+                httpResponse.statusCode == 200 else
+            {
                 logger.error("Public IP fetch returned non-200 status")
                 return nil
             }

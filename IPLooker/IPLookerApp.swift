@@ -530,18 +530,16 @@ struct ContentView: View {
     }
 
     private var publicIPRow: some View {
-        Group {
-            HStack {
-                self.publicIPLabel
+        HStack {
+            self.publicIPLabel
 
-                Spacer()
+            Spacer()
 
-                if self.viewModel.publicIP != nil {
-                    Button("Look Up My IP") {
-                        Task { await self.viewModel.lookupMyIP() }
-                    }
-                    .controlSize(.small)
+            if self.viewModel.publicIP != nil {
+                Button("Look Up My IP") {
+                    Task { await self.viewModel.lookupMyIP() }
                 }
+                .controlSize(.small)
             }
         }
         #if os(macOS)
