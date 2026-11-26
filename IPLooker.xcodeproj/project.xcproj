@@ -49,6 +49,7 @@
       "name": "Frameworks",
       "children": [
         { "path": "<DEVELOPER>/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/System/Library/Frameworks/AppIntents.framework", "target-membership": [ "IPLooker/frameworks" ] },
+        { "path": "<SDK>/System/Library/Frameworks/AppIntents.framework", "target-membership": [ "IPLooker/frameworks" ] },
       ],
     },
   ],
@@ -81,6 +82,7 @@
         "COMBINE_HIDPI_IMAGES": "YES",
         "CURRENT_PROJECT_VERSION": "$(CURRENT_PROJECT_VERSION)",
         "DEAD_CODE_STRIPPING": "YES",
+        "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
         "DEVELOPMENT_TEAM": "PL2FTGT24W",
         "ENABLE_APP_SANDBOX": "YES",
         "ENABLE_HARDENED_RUNTIME": "YES",
@@ -96,6 +98,7 @@
         "ENABLE_RESOURCE_ACCESS_PRINTING": "NO",
         "ENABLE_RESOURCE_ACCESS_USB": "NO",
         "ENABLE_USER_SELECTED_FILES": "readonly",
+        "GCC_GENERATE_DEBUGGING_SYMBOLS": "YES",
         "GENERATE_INFOPLIST_FILE": "YES",
         "INFOPLIST_FILE": "IPLooker/Info.plist",
         "INFOPLIST_KEY_CFBundleDisplayName": "IPLooker",
